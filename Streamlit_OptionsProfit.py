@@ -5,6 +5,8 @@ import math
 from scipy.stats import norm
 import matplotlib.pyplot as plt
 
+st.info(f"SciPy version: {1.10}")
+
 fileName = 'SMP_Max.csv'
 strikeRatio = 1.05
 riskFreeRateFile = 'Streamlit/RiskFreeRate.csv'

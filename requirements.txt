@@ -1,0 +1,9 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: osx-64
+
+streamlit=1.32.2=pypi_0
+scipy=1.10.0=pypi_0
+pandas=2.0.3=pypi_0
+matplotlib=3.6.3=pypi_0
+
