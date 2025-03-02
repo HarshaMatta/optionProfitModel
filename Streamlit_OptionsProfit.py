@@ -2,14 +2,29 @@ import os
 import streamlit as st
 import pandas as pd
 import math
-from scipy.stats import norm
 import matplotlib.pyplot as plt
 
-st.info(f"SciPy version: {1.10}")
+
+st.set_page_config(
+    page_title="Black-Scholes Option Pricing Model",
+    page_icon="📈",
+    layout="wide",
+    initial_sidebar_state="expanded")
+
+
+
+
 
 fileName = 'SMP_Max.csv'
 strikeRatio = 1.05
 riskFreeRateFile = 'Streamlit/RiskFreeRate.csv'
+
+def norm_cdf(x):
+    """
+    Calculates the CDF of the standard normal distribution at x.
+    """
+    return 0.5 * (1 + math.erf(x / math.sqrt(2)))
+
 
 def black_scholes_price(S, K, T, r, sigma, option_type='call'):
     if T <= 0 or sigma <= 0 or S <= 0 or K <= 0:
@@ -19,9 +34,9 @@ def black_scholes_price(S, K, T, r, sigma, option_type='call'):
     d2 = d1 - sigma * math.sqrt(T)
 
     if option_type.lower() == 'call':
-        price = S * norm.cdf(d1) - K * math.exp(-r * T) * norm.cdf(d2)
+        price = S * norm_cdf(d1) - K * math.exp(-r * T) * norm_cdf(d2)
     elif option_type.lower() == 'put':
-        price = K * math.exp(-r * T) * norm.cdf(-d2) - S * norm.cdf(-d1)
+        price = K * math.exp(-r * T) * norm_cdf(-d2) - S * norm_cdf(-d1)
     else:
         raise ValueError("Invalid option type. Use 'call' or 'put'.")
     
@@ -161,11 +176,7 @@ def cumulative_plot(start_index):
     plt.xticks(rotation=45)
     return fig
 
-st.set_page_config(
-    page_title="Black-Scholes Option Pricing Model",
-    page_icon="📈",
-    layout="wide",
-    initial_sidebar_state="expanded")
+
 
 st.sidebar.title("Black-Scholes Option Pricing Model")
 st.sidebar.write("This app calculates the profitability of options using the Black-Scholes model.")
