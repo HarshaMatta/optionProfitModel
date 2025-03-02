@@ -2,3 +2,4 @@
 # $ conda create --name <env> --file <this file>
 # platform: osx-64
 
+matplotlib==3.6.3
