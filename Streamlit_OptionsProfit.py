@@ -11,9 +11,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded")
 
-fileName = 'SMP_Max.csv'
 strikeRatio = 1.05
-riskFreeRateFile = 'Streamlit/RiskFreeRate.csv'
 
 def norm_cdf(x):
     """
@@ -109,7 +107,7 @@ def plot_call_price_vs_profit(stock_file, risk_free_file):
     ax.scatter(call_prices, yearly_profits, alpha=0.7)
     ax.set_xlabel("Call Price")
     ax.set_ylabel("Yearly Profit")
-    ax.set_title(f"Call Price vs. Yearly Profit for {os.path.basename(fileName)} Options")
+    ax.set_title(f"Call Price vs. Yearly Profit for Uploaded Stock Options")
     ax.grid(True)
     return fig
 
@@ -132,7 +130,7 @@ def plot_time_series(stock_file, risk_free_file):
     ax.plot(dates, yearly_profits, label='Yearly Profit', color='green')
     ax.set_xlabel("Date")
     ax.set_ylabel("Value")
-    ax.set_title(f"{os.path.basename(fileName)} Call Price and Yearly Profit Over Time")
+    ax.set_title("Call Price and Yearly Profit Over Time")
     ax.legend()
     ax.grid(True)
     plt.xticks(rotation=45)
