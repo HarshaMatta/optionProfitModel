@@ -11,10 +11,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded")
 
-
-
-
-
 fileName = 'SMP_Max.csv'
 strikeRatio = 1.05
 riskFreeRateFile = 'Streamlit/RiskFreeRate.csv'
@@ -42,16 +38,16 @@ def black_scholes_price(S, K, T, r, sigma, option_type='call'):
     
     return price
 
-def preprocess_data():
-    df = pd.read_csv(fileName)
+def preprocess_data(file):
+    df = pd.read_csv(file)
     df = df.sort_index(ascending=True).iloc[::-1].reset_index(drop=True)
     df["Date"] = pd.to_datetime(df["Date"], format="%m/%d/%Y")
     for col in ["Close/Last", "Open", "High", "Low"]:
         df[col] = df[col].replace('[\$,]', '', regex=True).astype(float)
     return df
 
-def preprocess_risk_free_rate():
-    rf_df = pd.read_csv(riskFreeRateFile)
+def preprocess_risk_free_rate(file):
+    rf_df = pd.read_csv(file)
     rf_df["observation_date"] = pd.to_datetime(rf_df["observation_date"])
     rf_df.set_index("observation_date", inplace=True)
     rf_df["DGS10"] = rf_df["DGS10"].fillna(method='ffill') / 100  # Convert to decimal
@@ -70,9 +66,9 @@ def volatility(index, df):
     log_returns = (prices / prices.shift(1)).apply(math.log).dropna()
     return log_returns.std() * math.sqrt(252)
 
-def diffCheck(start_index):
-    df = preprocess_data()
-    rf_df = preprocess_risk_free_rate()
+def diffCheck(start_index, stock_file, risk_free_file):
+    df = preprocess_data(stock_file)
+    rf_df = preprocess_risk_free_rate(risk_free_file)
     row_count = len(df)
     netReturn, totalCost = 0, 0
     
@@ -94,9 +90,9 @@ def diffCheck(start_index):
         "Annualized Returns": (netReturn / totalCost) ** (1/years)
     }
 
-def plot_call_price_vs_profit():
-    df = preprocess_data()
-    rf_df = preprocess_risk_free_rate()
+def plot_call_price_vs_profit(stock_file, risk_free_file):
+    df = preprocess_data(stock_file)
+    rf_df = preprocess_risk_free_rate(risk_free_file)
     row_count = len(df)
     call_prices, yearly_profits = [], []
 
@@ -117,9 +113,9 @@ def plot_call_price_vs_profit():
     ax.grid(True)
     return fig
 
-def plot_time_series():
-    df = preprocess_data()
-    rf_df = preprocess_risk_free_rate()
+def plot_time_series(stock_file, risk_free_file):
+    df = preprocess_data(stock_file)
+    rf_df = preprocess_risk_free_rate(risk_free_file)
     row_count = len(df)
     dates, call_prices, yearly_profits = [], [], []
 
@@ -142,9 +138,9 @@ def plot_time_series():
     plt.xticks(rotation=45)
     return fig
 
-def cumulative_plot(start_index):
-    df = preprocess_data()
-    rf_df = preprocess_risk_free_rate()
+def cumulative_plot(start_index, stock_file, risk_free_file):
+    df = preprocess_data(stock_file)
+    rf_df = preprocess_risk_free_rate(risk_free_file)
     row_count = len(df)
     cumulative_cost, cumulative_profit, cumulative_gain = [], [], []
     total_cost, net_return = 0, 0
@@ -194,15 +190,11 @@ st.sidebar.markdown("Created by:")
 st.sidebar.markdown(f'<a href="{linkedin_url}" target="_blank" style="text-decoration: none; color: inherit;"><img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" width="25" height="25" style="vertical-align: middle; margin-right: 10px;">`Harsha Matta`</a>', unsafe_allow_html=True)
 
 
-fileName = st.text_input("Enter the file path for the stock data")
-customRiskRate = st.text_input("Enter the file path for the risk-free rate data"); 
+stock_file = st.file_uploader("Upload the stock data CSV file", type=["csv"])
+risk_free_file = st.file_uploader("Upload the risk-free rate data CSV file", type=["csv"])
 
-if customRiskRate != "":
-    riskFreeRateFile = customRiskRate
-    
-
-if st.button("Run Analysis"):
-    results = diffCheck(252)
+if st.button("Run Analysis") and stock_file is not None and risk_free_file is not None:
+    results = diffCheck(252, stock_file, risk_free_file)
     st.write("### Results")
     st.write(f"Total Profit: {results['Total Profit']}")
     st.write(f"Total Cost: {results['Total Cost']}")
@@ -211,10 +203,12 @@ if st.button("Run Analysis"):
     st.write(f"Annualized Returns: {results['Annualized Returns']:.2%}")
 
     st.write("### Call Price vs. Yearly Profit")
-    st.pyplot(plot_call_price_vs_profit())
+    st.pyplot(plot_call_price_vs_profit(stock_file, risk_free_file))
 
     st.write("### Call Price and Yearly Profit Over Time")
-    st.pyplot(plot_time_series())
+    st.pyplot(plot_time_series(stock_file, risk_free_file))
     
     st.write("### Cumulative costs, gains, and profits over time")
-    st.pyplot(cumulative_plot(252))
+    st.pyplot(cumulative_plot(252, stock_file, risk_free_file))
+else:
+    st.error("Please upload both the stock data CSV file and the risk-free rate data CSV file.")
