@@ -3,6 +3,8 @@ import streamlit as st
 import pandas as pd
 import math
 import matplotlib.pyplot as plt
+from io import StringIO
+
 
 
 st.set_page_config(
@@ -37,12 +39,19 @@ def black_scholes_price(S, K, T, r, sigma, option_type='call'):
     return price
 
 def preprocess_data(file):
-    df = pd.read_csv(file)
+    # Ensure the file pointer is at the beginning
+    file.seek(0)
+    # Decode the file bytes to a string
+    data = file.getvalue().decode("utf-8")
+    # Use StringIO to simulate a file for pandas
+    df = pd.read_csv(StringIO(data))
+    
     df = df.sort_index(ascending=True).iloc[::-1].reset_index(drop=True)
     df["Date"] = pd.to_datetime(df["Date"], format="%m/%d/%Y")
     for col in ["Close/Last", "Open", "High", "Low"]:
         df[col] = df[col].replace('[\$,]', '', regex=True).astype(float)
     return df
+
 
 def preprocess_risk_free_rate(file):
     rf_df = pd.read_csv(file)
