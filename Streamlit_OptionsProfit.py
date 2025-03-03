@@ -25,28 +25,46 @@ def norm_cdf(x):
 def black_scholes_price(S, K, T, r, sigma, option_type='call'):
     if T <= 0 or sigma <= 0 or S <= 0 or K <= 0:
         raise ValueError("S, K, T, and sigma must be greater than 0.")
+
     d1 = (math.log(S / K) + (r + 0.5 * sigma**2) * T) / (sigma * math.sqrt(T))
     d2 = d1 - sigma * math.sqrt(T)
+
     if option_type.lower() == 'call':
         price = S * norm_cdf(d1) - K * math.exp(-r * T) * norm_cdf(d2)
     elif option_type.lower() == 'put':
         price = K * math.exp(-r * T) * norm_cdf(-d2) - S * norm_cdf(-d1)
     else:
         raise ValueError("Invalid option type. Use 'call' or 'put'.")
+    
     return price
 
-def preprocess_risk_free_rate(file):
-    file.seek(0)  # Reset the pointer to the start of the file
-    rf_df = pd.read_csv(file)
-    rf_df["observation_date"] = pd.to_datetime(rf_df["observation_date"])
-    rf_df.set_index("observation_date", inplace=True)
-    rf_df["DGS10"] = rf_df["DGS10"].ffill() / 100  # Use .ffill() to avoid the FutureWarning
-    return rf_df
+def preprocess_data(file):
+    # Ensure the file pointer is at the beginning
+    file.seek(0)
+    # Decode the file bytes to a string
+    data = file.getvalue().decode("utf-8")
+    # Use StringIO to simulate a file for pandas
+    df = pd.read_csv(StringIO(data))
+    
+    df = df.sort_index(ascending=True).iloc[::-1].reset_index(drop=True)
+    df["Date"] = pd.to_datetime(df["Date"], format="%m/%d/%Y")
+    for col in ["Close/Last", "Open", "High", "Low"]:
+        df[col] = df[col].replace('[\$,]', '', regex=True).astype(float)
+    return df
 
 
 def preprocess_risk_free_rate(file):
-    file.seek(0)  # Reset file pointer
-    rf_df = pd.read_csv(file)
+    # Convert the file's bytes to a string
+    file_content = file.getvalue().decode("utf-8")
+    
+    # Optional: Check if the file is empty and handle accordingly
+    if not file_content.strip():
+        raise ValueError("The risk-free rate file is empty.")
+    
+    # Use StringIO to simulate a file for pandas
+    rf_df = pd.read_csv(StringIO(file_content))
+    
+    # Process the DataFrame as expected
     rf_df["observation_date"] = pd.to_datetime(rf_df["observation_date"])
     rf_df.set_index("observation_date", inplace=True)
     rf_df["DGS10"] = rf_df["DGS10"].ffill() / 100  # Use .ffill() to avoid deprecation warnings
